@@ -37,5 +37,5 @@ Os cenários e dados são fictícios, conforme o enunciado. Os outputs foram pro
 Inserir aqui após publicar no GitHub:
 
 ```text
-https://github.com/<seu-usuario>/hvt-prompt-engineering-respostas
+https://github.com/JulianoBTeixeira/Pos-AIOps
 ```
