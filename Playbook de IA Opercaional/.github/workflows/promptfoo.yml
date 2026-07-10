@@ -1,0 +1,49 @@
+name: promptfoo-playbook
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  promptfoo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install promptfoo
+        run: npm install -g promptfoo
+
+      - name: Set up promptfoo cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/promptfoo
+          key: ${{ runner.os }}-promptfoo-v1
+          restore-keys: |
+            ${{ runner.os }}-promptfoo-
+
+      - name: Run promptfoo suite
+        run: |
+          promptfoo eval --config devops/nota-de-triagem/promptfooconfig.yaml
+          promptfoo eval --config devops/triagem-de-pods/promptfooconfig.yaml
+          promptfoo eval --config devops/networkpolicy-sentinel/promptfooconfig.yaml
+          promptfoo eval --config devops/causa-raiz-cerebro/promptfooconfig.yaml
+        working-directory: .
+
+      - name: Comment results on PR
+        if: github.event_name == 'pull_request'
+        uses: promptfoo/promptfoo-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          prompts: 'devops/**/prompt.md'
+          config: 'devops/nota-de-triagem/promptfooconfig.yaml'
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          cache-path: ~/.cache/promptfoo

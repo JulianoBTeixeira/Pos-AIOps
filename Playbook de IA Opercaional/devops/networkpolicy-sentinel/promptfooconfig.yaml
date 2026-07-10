@@ -1,0 +1,61 @@
+prompts:
+  - file://devops/networkpolicy-sentinel/prompt.md
+providers:
+  - openai:gpt-4o-mini
+  - anthropic:claude-3-5-sonnet-20240620
+tests:
+  - vars:
+      manifesto_permissivo: |
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: sentinel-allow
+          namespace: sentinel-prod
+        spec:
+          podSelector: {}
+          policyTypes:
+            - Ingress
+            - Egress
+          ingress:
+            - {}
+          egress:
+            - {}
+      mapa_servicos: |
+        Sentinel     -> namespace sentinel-prod, pods com label app=sentinel
+        Relay        -> namespace relay-prod,    pods com label app=relay
+        API gateway  -> namespace edge,          pods com label app=api-gateway
+        Forge        -> namespace forge-prod,    pods com label app=forge,   porta 5432
+        Cerebro      -> namespace cerebro-prod,  pods com label app=cerebro, porta 9200
+        DNS interno  -> namespace kube-system,   pods com label k8s-app=kube-dns, porta 53
+      regras_politica: |
+        - pods do Sentinel só aceitam tráfego de entrada do Relay e do API gateway
+        - pods do Sentinel só fazem saída para Forge, Cerebro e DNS interno
+        - nada de allow all
+        - política default-deny explícita no namespace
+        - toda regra precisa de comentário
+    assert:
+      - type: contains
+        value: "kind: NetworkPolicy"
+      - type: contains
+        value: policyTypes
+      - type: contains
+        value: Ingress
+      - type: contains
+        value: Egress
+      - type: not-contains
+        value: '- {}'
+      - type: contains
+        value: "app: relay"
+      - type: contains
+        value: 5432
+      - type: contains
+        value: 9200
+      - type: javascript
+        value: |
+          const hasComment = output.includes('#');
+          const hasNoAllowAll = !output.includes('- {}');
+          return hasComment && hasNoAllowAll;
+      - type: latency
+        value: '<=5000'
+      - type: cost
+        value: '<=0.01'
