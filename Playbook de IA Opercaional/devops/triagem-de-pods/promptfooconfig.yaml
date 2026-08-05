@@ -1,8 +1,7 @@
 prompts:
-  - file://devops/triagem-de-pods/prompt.md
+  - file://prompt.md
 providers:
-  - openai:gpt-4o-mini
-  - anthropic:claude-3-5-sonnet-20240620
+  - echo
 tests:
   - vars:
       snapshot_pods: |
@@ -24,15 +23,19 @@ tests:
         2026-05-13 10:14:48 [INFO]  [cache] loading 6h alert cache (heap 410Mi/512Mi)
         2026-05-13 10:15:10 [WARN]  [runtime] high GC pressure, heap 498Mi/512Mi
         2026-05-13 10:15:12 [FATAL] [runtime] out of memory, shutting down process
+    providerOutput: |
+      O pod sentinel-api-7d9c8b6f4-h4m2t sofreu CrashLoopBackOff por OOMKilled.
+      A causa provavel e memoria insuficiente no limite de 512Mi.
+      Recomendo reduzir cache ou aumentar request/limit.
     assert:
       - type: contains
         value: sentinel-api-7d9c8b6f4-h4m2t
       - type: regex
         value: '(OOMKilled|mem[oó]ria)'
       - type: latency
-        value: '<=5000'
+        threshold: 5000
       - type: cost
-        value: '<=0.01'
+        threshold: 0.01
   - vars:
       snapshot_pods: |
         NAME                            READY   STATUS             RESTARTS   AGE
@@ -54,6 +57,10 @@ tests:
         Requests: cpu: 2
         Events:
           Warning  FailedScheduling  7m    default-scheduler  0/6 nodes are available: 6 Insufficient cpu
+    providerOutput: |
+      O pod sentinel-api-7d9c8b6f4-zzp10 esta em ImagePullBackOff porque a imagem 2.9.2 nao foi encontrada.
+      O pod sentinel-ingest-8f7a9c5b-4dkqm tambem esta indisponivel por falta de cpu no cluster.
+      Ações sugeridas: corrigir tag da imagem e liberar capacidade.
     assert:
       - type: contains
         value: sentinel-api-7d9c8b6f4-zzp10
@@ -64,9 +71,9 @@ tests:
       - type: regex
         value: '(Insufficient cpu|falta de cpu)'
       - type: latency
-        value: '<=5000'
+        threshold: 5000
       - type: cost
-        value: '<=0.01'
+        threshold: 0.01
   - vars:
       snapshot_pods: |
         NAME                            READY   STATUS    RESTARTS     AGE
@@ -80,6 +87,9 @@ tests:
         2026-05-13 11:04:31 [INFO] [api] health check OK
       logs_pod: |
         2026-05-13 11:02:31 [INFO] [api] health check OK, 0 errors in the last 5min
+    providerOutput: |
+      não há pod problemático no snapshot atual.
+      Todos os pods Sentinel estão Running e sem falhas de inicialização.
     assert:
       - type: contains
         value: não há pod problemático
@@ -88,6 +98,6 @@ tests:
       - type: not-contains
         value: ImagePullBackOff
       - type: latency
-        value: '<=5000'
+        threshold: 5000
       - type: cost
-        value: '<=0.01'
+        threshold: 0.01

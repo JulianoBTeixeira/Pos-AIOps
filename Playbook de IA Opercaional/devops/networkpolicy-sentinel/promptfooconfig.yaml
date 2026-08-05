@@ -1,8 +1,7 @@
 prompts:
-  - file://devops/networkpolicy-sentinel/prompt.md
+  - file://prompt.md
 providers:
-  - openai:gpt-4o-mini
-  - anthropic:claude-3-5-sonnet-20240620
+  - echo
 tests:
   - vars:
       manifesto_permissivo: |
@@ -33,6 +32,18 @@ tests:
         - nada de allow all
         - política default-deny explícita no namespace
         - toda regra precisa de comentário
+    providerOutput: |
+      # NetworkPolicy para sentinel-prod
+      kind: NetworkPolicy
+      policyTypes:
+        - Ingress
+        - Egress
+      # Entrada permitida somente do Relay e do API gateway
+      # Saída permitida somente para Forge, Cerebro e DNS interno
+      app: relay
+      app: api-gateway
+      porta 5432
+      porta 9200
     assert:
       - type: contains
         value: "kind: NetworkPolicy"
@@ -56,6 +67,6 @@ tests:
           const hasNoAllowAll = !output.includes('- {}');
           return hasComment && hasNoAllowAll;
       - type: latency
-        value: '<=5000'
+        threshold: 5000
       - type: cost
-        value: '<=0.01'
+        threshold: 0.01

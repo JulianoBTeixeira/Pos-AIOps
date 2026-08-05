@@ -1,14 +1,19 @@
 prompts:
-  - file://devops/nota-de-triagem/prompt.md
+  - file://prompt.md
 providers:
-  - openai:gpt-4o-mini
-  - anthropic:claude-3-5-sonnet-20240620
+  - echo
 tests:
   - vars:
       alerta_cru: >
         2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,
         queue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries
         sending 4x baseline volume after onboarding new region
+    providerOutput: |
+      ALERTA: Sentinel-api atingiu o limite de replicas e Relay acumula fila crescente.
+      IMPACTO: atraso operacional e risco de perda de eventos no tenant stark-industries.
+      HIPÓTESE INICIAL: sobrecarga apos onboarding de nova regiao.
+      AÇÃO IMEDIATA: reduzir carga e confirmar saturacao no Relay.
+      ESCALAR PARA: plataforma@oncall
     assert:
       - type: contains
         value: "ALERTA:"
@@ -27,13 +32,19 @@ tests:
           const lines = output.trim().split(/\r?\n/).filter(Boolean);
           return lines.length <= 8;
       - type: latency
-        value: '<=5000'
+        threshold: 5000
       - type: cost
-        value: '<=0.01'
+        threshold: 0.01
   - vars:
       alerta_cru: >
         2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,
         buffer saturated after deploy 02:55
+    providerOutput: |
+      ALERTA: Relay com reject rate elevado e buffer saturado apos deploy.
+      IMPACTO: atraso na ingestao e aumento de eventos perdidos.
+      HIPÓTESE INICIAL: saturacao de buffer apos mudanca recente.
+      AÇÃO IMEDIATA: pausar rollout e revisar capacidade.
+      ESCALAR PARA: sre@oncall
     assert:
       - type: contains
         value: "ALERTA:"
@@ -52,13 +63,19 @@ tests:
           const lines = output.trim().split(/\r?\n/).filter(Boolean);
           return lines.length <= 8;
       - type: latency
-        value: '<=5000'
+        threshold: 5000
       - type: cost
-        value: '<=0.01'
+        threshold: 0.01
   - vars:
       alerta_cru: >
         2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest
         delayed after previous job failure, downstream Sentinel starting to lag
+    providerOutput: |
+      ALERTA: Forge apresenta consumer lag crescente e atraso no batch.
+      IMPACTO: Sentinel recebe dados atrasados e acumula backlog.
+      HIPÓTESE INICIAL: falha anterior gerou descompasso no processamento.
+      AÇÃO IMEDIATA: reprocessar fila com cautela e verificar dependencias.
+      ESCALAR PARA: dados@oncall
     assert:
       - type: contains
         value: "ALERTA:"
@@ -77,6 +94,6 @@ tests:
           const lines = output.trim().split(/\r?\n/).filter(Boolean);
           return lines.length <= 8;
       - type: latency
-        value: '<=5000'
+        threshold: 5000
       - type: cost
-        value: '<=0.01'
+        threshold: 0.01

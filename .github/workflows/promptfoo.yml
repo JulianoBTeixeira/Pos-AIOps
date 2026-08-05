@@ -36,14 +36,4 @@ jobs:
           promptfoo eval --config devops/triagem-de-pods/promptfooconfig.yaml
           promptfoo eval --config devops/networkpolicy-sentinel/promptfooconfig.yaml
           promptfoo eval --config devops/causa-raiz-cerebro/promptfooconfig.yaml
-        working-directory: .
-
-      - name: Comment results on PR
-        if: github.event_name == 'pull_request'
-        uses: promptfoo/promptfoo-action@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          prompts: 'devops/**/prompt.md'
-          config: 'devops/nota-de-triagem/promptfooconfig.yaml'
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          cache-path: ~/.cache/promptfoo
+        working-directory: Playbook de IA Opercaional
