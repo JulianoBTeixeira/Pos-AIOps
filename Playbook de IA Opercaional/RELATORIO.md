@@ -145,6 +145,16 @@ v3: refinou comentários e confirmou seletores e portas do mapa de serviços.
   - rodar só o que mudou é mais barato, mas arrisca regressões fora do diff;
   - validar só asserts determinísticos é rápido, mas não pega qualidade do texto livre.
 
+## Nota de correção (professor)
+
+- O checkpoint 09 foi mantido no formato original de gate com juiz LLM (rubrica + `llm-rubric`).
+- A validação de execução do checkpoint 09 depende de provider autenticado no ambiente.
+- Na ausência de credenciais, a validação recomendada é estrutural.
+- Validar existência de `devops/causa-raiz-cerebro/rubrica.md`.
+- Validar uso de `llm-rubric` em `devops/causa-raiz-cerebro/promptfooconfig.yaml`.
+- Validar workflow centralizado em `.github/workflows/promptfoo.yml`.
+- Os checkpoints determinísticos (08) permanecem executáveis sem juiz externo.
+
 ## Nota final
 
 Os arquivos foram organizados para preservar o workspace antigo sem alterações. Os outputs acima são a curadoria de referência do playbook e servem como base para a execução com providers reais.
